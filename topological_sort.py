@@ -2,8 +2,12 @@
 import matplotlib.pyplot as plt
 import networkx as nx
 
-from data.left_hand_75kg.left_hand_75kg import names, pairs
+import data.left_hand_75kg.left_hand_75kg as lh75
+import data.right_hand_70kg.right_hand_70kg as rh70
 from grinev_algorithm import TournamentGraphConstructor
+
+names, pairs = lh75.names, lh75.pairs
+#names, pairs = rh70.names, rh70.pairs
 
 plt.rcParams["figure.figsize"] = (20, 10)
 

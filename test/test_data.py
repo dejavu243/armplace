@@ -2,7 +2,10 @@
 import logging
 import unittest
 
-from data.left_hand_75kg.left_hand_75kg import names, pairs
+import data.left_hand_75kg.left_hand_75kg as lh75
+import data.right_hand_70kg.right_hand_70kg as rh70
+
+data_test = [lh75, rh70]
 
 logger = logging.getLogger("test")
 
@@ -21,4 +24,11 @@ def check_pairs_names(_names: dict, _pairs: list) -> bool:
 
 class TestData(unittest.TestCase):
     def test_pairs_names(self):
-        self.assertTrue(check_pairs_names(names, pairs))
+        for data in data_test:
+            self.assertTrue(check_pairs_names(data.names, data.pairs))
+
+    def test_weights_names(self):
+        for data in data_test:
+            if data.weights:
+                for name in data.names.values():
+                    self.assertTrue(name in data.weights.keys())

@@ -58,7 +58,7 @@ class TournamentGraphConstructor:
         for name in self.names.values():
             is_total_loser = True
             for pair in self.pairs:
-                if name in pair[1]:
+                if name in pair[1] and pair[0] in self.names.values():
                     is_total_loser = False
             if is_total_loser:
                 total_losers.append(name)

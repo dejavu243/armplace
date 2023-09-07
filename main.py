@@ -8,7 +8,7 @@ import data.right_hand_70kg.right_hand_70kg as rh70
 from grinev_algorithm import TournamentGraphConstructor
 
 names, pairs = lh75.names, lh75.pairs
-#names, pairs = rh70.names, rh70.pairs
+# names, pairs = rh70.names, rh70.pairs
 
 logger = logging.getLogger(__name__)
 logging.basicConfig()
@@ -29,6 +29,11 @@ def run_alg():
     plt.show()
 
 
+def save_graph():
+    alg = TournamentGraphConstructor(names, pairs)
+    alg.save_edgelist()
+
+
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    run_alg()
+    save_graph()

@@ -42,7 +42,7 @@ class TournamentGraphConstructor:
         self.names = names
         self.pairs = pairs
 
-    def find_winner(self, sportsman: str):
+    def find_winner(self, sportsman: str) -> list:
         """Поиск спортсменов выигравших sportsman"""
         winners = []
         for pair in self.pairs:
@@ -65,7 +65,7 @@ class TournamentGraphConstructor:
         logger.debug("total losers list %s", total_losers)
         return total_losers
 
-    def make_chains(self, first_sportsman: str):
+    def make_chains(self, first_sportsman: str) -> list:
         """Нахождение всех цепочек от first_sportsman"""
         chain = [[first_sportsman]]
         sportsmen = [first_sportsman]
@@ -122,3 +122,25 @@ class TournamentGraphConstructor:
         graph.add_weighted_edges_from(weighted_edges)
 
         return graph
+
+    def save_edgelist(self):
+        """Сохранение графа в файл edgelist.txt"""
+        chains = self.make_all_chains()
+        longest_chains = []
+        for start_pos, chain in chains.items():
+            max_chains = get_max_chains(chain)
+            longest_chains.extend(max_chains)
+
+        all_edges = []
+        for chain in longest_chains:
+            edges = [(chain[i], chain[i + 1]) for i in range(len(chain) - 1)]
+            all_edges.extend(edges)
+        edge_counter = dict(Counter(all_edges))
+
+        with open("edgelist.txt", "w", encoding="utf-8") as file:
+            edges_number = len(edge_counter.values())
+            file.write(f"{edges_number}\n")
+            for edge, count in edge_counter.items():
+                file.write(f"{edge[1]} {edge[0]} {count}\n")
+
+        logger.info("File edgelist.txt saved")

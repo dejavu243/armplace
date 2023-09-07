@@ -34,8 +34,8 @@ def get_max_chains(lists: list[list]) -> list[list]:
         if len(inner_list) == max_chain_length:
             max_chains.append(inner_list)
 
-    #for inner_list in lists:
-    #    if len(inner_list) == max_chain_length-1 and inner_list not in max_chains:
-    #        max_chains.append(inner_list)
+    for inner_list in lists:
+        if len(inner_list) == max_chain_length-1 and inner_list not in max_chains:
+            max_chains.append(inner_list)
 
     return max_chains

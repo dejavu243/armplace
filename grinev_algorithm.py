@@ -68,14 +68,18 @@ class TournamentGraphConstructor:
     def make_chains(self, first_sportsman: str) -> list:
         """Нахождение всех цепочек от first_sportsman"""
         chain = [[first_sportsman]]
-        sportsmen = [first_sportsman]
+        sportsmen_next = [first_sportsman]
         stop_condition = True
+        logger.debug("Initial sportsmen %s list", sportsmen_next)
         while stop_condition:
+            sportsmen = list(set(sportsmen_next)).copy()
+            sportsmen_next = []
             for sportsman in sportsmen:
+                logger.debug("sportsman %s", sportsman)
                 winners = self.find_winner(sportsman)
+                sportsmen_next.extend(winners)
                 if len(winners) == 1:
                     chain = append2lists(chain, sportsman, winners[0])
-                    sportsmen = winners
                     logger.debug("There is only one winner of %s, %s", sportsman, winners)
                 elif len(winners) > 1:
                     chain_upd = []
@@ -85,10 +89,12 @@ class TournamentGraphConstructor:
                         chain_upd.extend(chain_winner)
                     chain = chain_upd
                     logger.debug("Updated chain %s", chain_upd)
-                    sportsmen = winners
                 elif not winners:
-                    stop_condition = False
                     logger.debug("There are not winner of %s, chain ended", sportsman)
+            logger.debug("Updated sportsmen list %s", sportsmen_next)
+            if not sportsmen_next:
+                logger.info("Algorithm for %s finished", first_sportsman)
+                stop_condition = False
         return chain
 
     def make_all_chains(self) -> dict:

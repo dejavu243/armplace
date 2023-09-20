@@ -1,12 +1,12 @@
 """Дополнительные функции"""
 
 def names_swap(_names: dict) -> dict:
-    """swap keys in values in dict"""
+   # """swap keys in values in dict"""
     return {v: k for k, v in _names.items()}  # key - family, value - position in initial table
 
 
 def append2lists(lists: list[list], previous_element: str, element: str) -> list[list]:
-    """Прикрепить спортсмена к нужной цепочке"""
+   # """Прикрепить спортсмена к нужной цепочке"""
     lists_upd = []
     for inner_list in lists:
         inner_list_copy = inner_list.copy()
@@ -17,7 +17,7 @@ def append2lists(lists: list[list], previous_element: str, element: str) -> list
 
 
 def drop_duplicates(lists: list[list], cut_less: int = 2) -> list[list]:
-    """Удалить дубликаты и отрезать короткие цепочки"""
+   # """Удалить дубликаты и отрезать короткие цепочки"""
     lists_upd = []
     for inner_list in lists:
         if inner_list in lists_upd or len(inner_list) <= cut_less:
@@ -27,7 +27,7 @@ def drop_duplicates(lists: list[list], cut_less: int = 2) -> list[list]:
 
 
 def get_max_chains(lists: list[list]) -> list[list]:
-    """Функция нахождения самых длинных цепочек"""
+   # """Функция нахождения самых длинных цепочек"""
     max_chain_length = max(len(x) for x in lists)
     max_chains = []
     for inner_list in lists:

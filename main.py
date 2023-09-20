@@ -3,12 +3,14 @@ import logging
 import matplotlib.pyplot as plt
 import networkx as nx
 
+import data.left_hand_80kg.left_hand_80kg as lh80
 import data.left_hand_75kg.left_hand_75kg as lh75
 import data.right_hand_70kg.right_hand_70kg as rh70
 from grinev_algorithm import TournamentGraphConstructor
 
-names, pairs = lh75.names, lh75.pairs
+# names, pairs = lh75.names, lh75.pairs
 # names, pairs = rh70.names, rh70.pairs
+names, pairs = lh80.names, lh80.pairs
 
 logger = logging.getLogger(__name__)
 logging.basicConfig()

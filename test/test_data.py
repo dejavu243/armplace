@@ -2,10 +2,11 @@
 import logging
 import unittest
 
-import data.left_hand_75kg.left_hand_75kg as lh75
 import data.right_hand_70kg.right_hand_70kg as rh70
+import data.left_hand_75kg.left_hand_75kg as lh75
+import data.left_hand_80kg.left_hand_80kg as lh80
 
-data_test = [lh75, rh70]
+data_test = [lh80, lh75, rh70]
 
 logger = logging.getLogger("test")
 

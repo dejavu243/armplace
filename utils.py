@@ -17,7 +17,7 @@ def append2lists(lists: list[list], previous_element: str, element: str) -> list
     return lists_upd
 
 
-def drop_duplicates(lists: list[list], cut_less: int = 3) -> list[list]:
+def drop_duplicates(lists: list[list], cut_less: int = 2) -> list[list]:
    # """Удалить дубликаты и отрезать короткие цепочки"""
     lists_upd = []
     for inner_list in lists:

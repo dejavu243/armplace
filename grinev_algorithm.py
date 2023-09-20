@@ -18,12 +18,13 @@ There is Grinev tournament algorithm (GrinTour algorithm), principles
     8. Ищем пересечения этих цепочек и строим итоговый граф (данный пункт не до конца формализован).
     тут есть ошибки, но для понимания принципа пойдет]
 
-    input: networkx graph
-    output: list of participants distributed by places
+    input: dict of spotsmen, dict of pairs
+    output: graph of tournament
 
 """
 import logging
 from collections import Counter
+from typing import Optional
 
 import networkx
 import networkx as nx
@@ -108,7 +109,7 @@ class TournamentGraphConstructor:
             all_chains[loser] = chain
         return all_chains
 
-    def make_graph(self) -> networkx.Graph:
+    def make_graph(self, weights: Optional[dict] = None) -> networkx.Graph:
         """Построение графа NX"""
         chains = self.make_all_chains()
         longest_chains = []

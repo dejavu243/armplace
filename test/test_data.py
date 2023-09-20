@@ -26,6 +26,7 @@ def check_pairs_names(_names: dict, _pairs: list) -> bool:
 class TestData(unittest.TestCase):
     def test_pairs_names(self):
         for data in data_test:
+            logger.info("Test data %s", data.names)
             self.assertTrue(check_pairs_names(data.names, data.pairs))
 
     def test_weights_names(self):

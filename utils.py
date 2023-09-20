@@ -12,11 +12,12 @@ def append2lists(lists: list[list], previous_element: str, element: str) -> list
         inner_list_copy = inner_list.copy()
         if inner_list_copy[-1] != element and inner_list_copy[-1] == previous_element:
             inner_list_copy.append(element)
-        lists_upd.append(inner_list_copy)
+        if inner_list_copy not in lists_upd:
+            lists_upd.append(inner_list_copy)
     return lists_upd
 
 
-def drop_duplicates(lists: list[list], cut_less: int = 2) -> list[list]:
+def drop_duplicates(lists: list[list], cut_less: int = 3) -> list[list]:
    # """Удалить дубликаты и отрезать короткие цепочки"""
     lists_upd = []
     for inner_list in lists:

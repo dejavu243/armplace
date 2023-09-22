@@ -177,7 +177,7 @@ def calc_and_save_places(_names: dict, _pairs: dict, filename: pathlib.Path = pa
     with open(filename, 'w', encoding="utf-8") as file:
         for k, v in sorted(tournament.items(), key=lambda x: x[1]['place']):
             file.write(f'{v["place"]} {k}\n')
-            msg = f'PLACE:, {v["place"]}, \t{k}\tLEVEL: {v["level"]}, \tW/L: {v["wins"]}, {v["losses"]}'
+            msg = f'PLACE:, {v["place"]}, \t{k}\tLEVEL: {v["level"]}, \tW/L: {v["wins"]}/{v["losses"]}'
             logger.info(msg)
 
 
@@ -192,5 +192,5 @@ if __name__ == '__main__':
     tournament = get_places(tour, graph)
 
     for k, v in sorted(tournament.items(), key=lambda x: x[1]['place']):
-        msg = f'PLACE:, {v["place"]}, \t{k}\tLEVEL: {v["level"]}, \tW/L: {v["wins"]}, {v["losses"]}'
+        msg = f'PLACE:, {v["place"]}, \t{k}\tLEVEL: {v["level"]}, \tW/L: {v["wins"]}/{v["losses"]}'
         logger.info(msg)

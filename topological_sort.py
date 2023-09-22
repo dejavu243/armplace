@@ -8,9 +8,13 @@
     5. Delete targets
     6. If there are no nodes unvisited than exit, else go to 2.
 """
+import pathlib
+
 import matplotlib.pyplot as plt
 import networkx
 import networkx as nx
+
+import logging
 
 import data.left_hand_75kg.left_hand_75kg as lh75
 import data.right_hand_70kg.right_hand_70kg as rh70
@@ -22,6 +26,9 @@ names, pairs = lh80.names, lh80.pairs
 # names, pairs = rh70.names, rh70.pairs
 
 plt.rcParams["figure.figsize"] = (20, 10)
+logger = logging.getLogger(__name__)
+logging.basicConfig()
+logger.setLevel(logging.INFO)
 
 
 def get_tournament_dict(_graph: networkx.Graph) -> dict:
@@ -77,45 +84,35 @@ def get_target_points_sorted(target_points, keys=None, reverse=None):
                               order_list[2] * item[1][keys[2]], order_list[3] * item[1][keys[3]]))
 
 
-# example topological sort
-alg = TournamentGraphConstructor(names, pairs)
-graph = alg.make_graph()
-top_sort = list(nx.topological_sort(graph))
-
-tour = get_tournament_dict(graph)
-print(get_tournament_dict(graph))
-
-
-# for k, v in sorted(tournament.items(), key = lambda x: x[1]['place']):
-#    print("PLACE:", v["place"], "\t", k, "\tLEVEL:", v["level"], "\tW/L:", v["wins"], v["losses"])
-
-
 def get_places(_tournament: dict, _graph: networkx.Graph):
+    init_graph = _graph.copy()
     source = [x for x in _graph.nodes() if _graph.out_degree(x) > 0 and _graph.in_degree(x) == 0][
         0]  # only one source, first place
     targets = [x for x in _graph.nodes() if _graph.out_degree(x) == 0 and _graph.in_degree(x) > 0]
-
-
+    logger.debug("source node: %s", source)
+    logger.debug("target nodes: %s", targets)
 
     # 1. set places
     _tournament[source]["place"] = 1
-
+    place_up = 1  # lowest place definition
+    logger.debug(f'{source}, place:\t, {_tournament[source]["place"]}')
     node, position = source, _tournament[source]["place"]
-    print(node, 'place:\t', _tournament[node]["place"])
+    logger.debug(node, 'place:\t', _tournament[node]["place"])
     while len(list(_graph.out_edges(node))) == 1:
         node = list(_graph.out_edges(node))[0][1]
         position += 1
         _tournament[node]["place"] = position
-        print(node, 'place:\t', _tournament[node]["place"])
+        logger.debug(f'{node}, place:\t, {_tournament[node]["place"]}')
 
-    count, max_count = 0, 10
+    place_up = position
+    count, max_count = 0, 100
     stop_condition = False
     max_place = len(_tournament)
     targets_iter = targets.copy()
-    print("max_place", max_place)
+    logger.info("max_place: %s", max_place)
     while not stop_condition:
-        print("count:", count)
-        print("targets", targets_iter)
+        logger.debug("count: %s", count)
+        logger.debug("targets: %s", targets_iter)
         count += 1
         if count == max_count:
             break
@@ -130,12 +127,10 @@ def get_places(_tournament: dict, _graph: networkx.Graph):
             winners_min_level = min([_tournament[winner[0]]["level"] for winner in target_winners])
             winners_max_wins = max([_tournament[winner[0]]["wins"] for winner in target_winners])
             chain_up_length = len(max(nx.all_simple_paths(_graph, source, target), key=lambda x: len(x)))
+            chain_down_length = len(
+                max(nx.all_simple_paths(init_graph, target, targets) if target not in targets else [[]],
+                    key=lambda x: len(x)))
 
-            all_simple_paths = list(nx.all_simple_paths(_graph, target, targets[0])) if target not in targets else None
-            print("all_simple_paths", all_simple_paths)
-            chain_down_length = 0
-            if all_simple_paths:
-                chain_down_length = len(max(all_simple_paths, key=lambda x: len(x)))
             target_points[target] = {"winners_mean_level": winners_mean_level,
                                      "winners_max_wins": winners_max_wins,
                                      "chain_up_length": chain_up_length,
@@ -143,7 +138,6 @@ def get_places(_tournament: dict, _graph: networkx.Graph):
                                      "winners_max_level": winners_max_level,
                                      "winners_min_level": winners_min_level}
 
-        print()
         # sort by first important value
         sorted_targets = get_target_points_sorted(target_points,
                                                   ["chain_up_length", "winners_min_level", "winners_mean_level",
@@ -151,20 +145,19 @@ def get_places(_tournament: dict, _graph: networkx.Graph):
                                                   [False, True, True, True])
 
         for e in sorted_targets:
-            print(e)
-        print()
+            logger.debug(e)
 
         # set places
         for target in sorted_targets:
             name = target[0]
             _tournament[name]["place"] = max_place
             max_place -= 1
-            print("Name %s set place %d" % (name, _tournament[name]["place"]))
-            if max_place <= 3:
+            logger.debug("Name %s set place %d" % (name, _tournament[name]["place"]))
+            if max_place <= place_up:
                 stop_condition = True
                 break
 
-        print("max_place", max_place)
+        logger.debug("max_place: %s", max_place)
         _graph.remove_nodes_from(targets_iter)
         targets_iter = [x for x in _graph.nodes() if _graph.out_degree(x) == 0 and _graph.in_degree(x) > 0]
 
@@ -174,8 +167,30 @@ def get_places(_tournament: dict, _graph: networkx.Graph):
     return _tournament.copy()
 
 
-tournament = get_places(tour, graph)
+def calc_and_save_places(_names: dict, _pairs: dict, filename: pathlib.Path = pathlib.Path("./places.txt")):
+    algorithm = TournamentGraphConstructor(_names, _pairs)
+    graph = algorithm.make_graph()
+    tour = get_tournament_dict(graph)
+    logger.debug("tournament_dict %s", get_tournament_dict(graph))
+    tournament = get_places(tour, graph)
 
-#for k, v in sorted(tournament.items(), key=lambda x: x[1]['place']):
-for k, v in tournament.items():
-    print("PLACE:", v["place"], "\t", k, "\tLEVEL:", v["level"], "\tW/L:", v["wins"], v["losses"])
+    with open(filename, 'w', encoding="utf-8") as file:
+        for k, v in sorted(tournament.items(), key=lambda x: x[1]['place']):
+            file.write(f'{v["place"]} {k}\n')
+            msg = f'PLACE:, {v["place"]}, \t{k}\tLEVEL: {v["level"]}, \tW/L: {v["wins"]}, {v["losses"]}'
+            logger.info(msg)
+
+
+if __name__ == '__main__':
+    # example topological sort
+    alg = TournamentGraphConstructor(names, pairs)
+    graph = alg.make_graph()
+    top_sort = list(nx.topological_sort(graph))
+    tour = get_tournament_dict(graph)
+    logger.debug("tournament_dict %s", get_tournament_dict(graph))
+
+    tournament = get_places(tour, graph)
+
+    for k, v in sorted(tournament.items(), key=lambda x: x[1]['place']):
+        msg = f'PLACE:, {v["place"]}, \t{k}\tLEVEL: {v["level"]}, \tW/L: {v["wins"]}, {v["losses"]}'
+        logger.info(msg)

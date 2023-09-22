@@ -7,6 +7,7 @@ import data.left_hand_80kg.left_hand_80kg as lh80
 import data.left_hand_75kg.left_hand_75kg as lh75
 import data.right_hand_70kg.right_hand_70kg as rh70
 from grinev_algorithm import TournamentGraphConstructor
+from topological_sort import calc_and_save_places
 
 # names, pairs = lh75.names, lh75.pairs
 # names, pairs = rh70.names, rh70.pairs
@@ -34,7 +35,7 @@ def run_alg():
 def save_graph():
     alg = TournamentGraphConstructor(names, pairs)
     alg.save_edgelist()
-
+    calc_and_save_places(names, pairs)
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':

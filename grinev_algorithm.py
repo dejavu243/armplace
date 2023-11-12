@@ -18,7 +18,7 @@ There is Grinev tournament algorithm (GrinTour algorithm), principles
     8. Ищем пересечения этих цепочек и строим итоговый граф (данный пункт не до конца формализован).
     тут есть ошибки, но для понимания принципа пойдет]
 
-    input: dict of spotsmen, dict of pairs
+    input: dict of sportsmen, dict of pairs
     output: graph of tournament
 
 """

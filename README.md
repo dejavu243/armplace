@@ -2,7 +2,7 @@
 Assign places in the armwrestling tournaments
 
 ## Structure
- - `read_tuournament.py` - make tournament dict from files
+ - `read_tuournament.py` - make `TournamentData` from files
  - `grinev_algorithm.py` - construct graph
  - `topological_sort.py` - assign places
  

@@ -50,3 +50,4 @@ class TournamentData:
     names: list
     pairs: dict
     weights: dict
+    with_superfinal: bool = False

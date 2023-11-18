@@ -46,7 +46,7 @@ def read_names(lines: list) -> tuple:
     results = None
     for i, name in enumerate(lines):
         if "+" not in name and "-" not in name:
-            names[i] = name.strip()
+            names[i+1] = name.strip()
         else:
             results = list(name.strip())
     return names, results
@@ -55,14 +55,14 @@ def read_names(lines: list) -> tuple:
 def read_weigths(lines: list) -> dict:
     weights = {}
     for i, weight in enumerate(lines):
-        weights[i] = float(weight.strip().replace(",", "."))
+        weights[i+1] = float(weight.strip().replace(",", "."))
     return weights
 
 def make_pairs(names: dict, results: list) -> dict:
     pass
 
 
-def read_results_file(filepath: Union[Path, str]) -> dict:
+def read_tournament_files(filepath: Union[Path, str]) -> dict:
     filelist = glob(filepath + "*.txt")
     logger.info("filelist: %s", filelist)
     files = {}
@@ -77,7 +77,7 @@ def read_results_file(filepath: Union[Path, str]) -> dict:
                 logger.debug(f"{results=}")
             elif WEIGHTS_FILE_SUFFIX in filename:
                 weights = read_weigths(lines)
-                files[RESULT_FILE_SUFFIX] = weights
+                files[WEIGHTS_FILE_SUFFIX] = weights
                 logger.debug(f"{weights=}")
             elif RESULT_FILE_5_6_SUFFIX in filename:
                 names, results = read_names(lines)
@@ -92,8 +92,61 @@ def read_results_file(filepath: Union[Path, str]) -> dict:
                 logger.warning("File %s not mathing with tournament files", filename)
         except Exception as error:
             logger.error("File %s doesn't read, check existence or encoding \n%s", filename, error)
-
+    logger.info(f"{len(files.keys())} tournament files read")
     return files
 
 
-read_results_file('./data/left_hand_75kg/')
+def tournament_recovery(files: dict) -> list:
+    names, results = files[RESULT_FILE_SUFFIX]
+    sportsmen_count = len(names.keys())
+    result_length = len(results)
+    sequence_length = 2 * result_length + sportsmen_count
+    with_superfinal = True if result_length == 2 * (sportsmen_count-1) + 1 else False
+    tournament_sequence = [0] * sequence_length
+    logger.debug(f"{sequence_length=}, {result_length=}, {sportsmen_count=}, {with_superfinal=}")
+    for index, name in names.items():
+        tournament_sequence[index-1] = index
+    pairs = []
+    pair_counter = 0
+    for index in range(0, len(tournament_sequence), 2):
+        pair_index = index // 2
+        pair_counter += 1
+        logger.debug(f"{index=}, {pair_index=}, {pair_counter=}")
+
+        if pair_index == result_length:
+            logger.debug(f"pair_index == result_length {index=} {pair_index=}")
+            break
+
+        if results[pair_index] == "+":
+            winner_index_in_names = tournament_sequence[index]
+            loser_index_in_names = tournament_sequence[index+1]
+            new_winner_index = DE_OLD_winner[pair_index][sportsmen_count-2] # TODO: why -2
+            new_loser_index = DE_OLD_loser[pair_index][sportsmen_count-2]
+            logger.debug(f"{loser_index_in_names=}, {winner_index_in_names=}, {new_loser_index=}, {new_winner_index=} {results[pair_index]=}")
+
+            tournament_sequence[new_winner_index-1] = winner_index_in_names
+            tournament_sequence[new_loser_index-1] = loser_index_in_names
+            logger.debug(f"pair: {names[winner_index_in_names]} (win), {names[loser_index_in_names]} (loose)")
+            pairs.append((names[winner_index_in_names], names[loser_index_in_names]))
+
+        elif results[pair_index] == "-":
+            winner_index_in_names = tournament_sequence[index+1]
+            loser_index_in_names = tournament_sequence[index]
+            new_winner_index = DE_OLD_winner[pair_index][sportsmen_count-2]
+            new_loser_index = DE_OLD_loser[pair_index][sportsmen_count-2]
+            logger.debug(f"{loser_index_in_names=}, {winner_index_in_names=}, {new_loser_index=}, {new_winner_index=} {results[pair_index]=}")
+
+            tournament_sequence[new_winner_index-1] = winner_index_in_names
+            tournament_sequence[new_loser_index-1] = loser_index_in_names
+            logger.debug(f"pair {names[winner_index_in_names]} (win), {names[loser_index_in_names]} (loose)")
+            pairs.append((names[winner_index_in_names], names[loser_index_in_names]))
+
+    logger.debug(tournament_sequence)
+    return pairs
+
+#####################
+files = read_tournament_files('./data/left_hand_75kg/')
+pairs = tournament_recovery(files)
+
+for pair in pairs:
+    print(pair)

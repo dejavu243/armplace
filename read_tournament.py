@@ -23,21 +23,77 @@ Read tournament from files
 
 import logging
 from pathlib import Path
+from glob import glob
+from typing import Union
 
 from data.DE_OLD_Winner import DE_OLD_winner
 from data.DE_OLD_Loser import DE_OLD_loser
 
 logger = logging.getLogger(__name__)
 logging.basicConfig()
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
-RESULT_FILE_SUFFIX = "DE"
-WEIGHTS_FILE_SUFFIX = "ADE"
+RESULT_FILE_SUFFIX = "[DE]"
+RESULT_FILE_5_6_SUFFIX = "[DE_5-6]"
+WEIGHTS_FILE_SUFFIX = "[ADE]"
+WEIGHTS_FILE_5_6_SUFFIX = "[DE_0_5-6]"
 
 CURRENT_DIR = Path(__file__).parent.resolve()
 
 
-def read_results_file(filename: Path) -> dict:
-    with open(filename, "r", encoding="utf-8") as f:
-        file = f.read()
-        logger.info(file)
+def read_names(lines: list) -> tuple:
+    names = {}
+    results = None
+    for i, name in enumerate(lines):
+        if "+" not in name and "-" not in name:
+            names[i] = name.strip()
+        else:
+            results = list(name.strip())
+    return names, results
+
+
+def read_weigths(lines: list) -> dict:
+    weights = {}
+    for i, weight in enumerate(lines):
+        weights[i] = float(weight.strip().replace(",", "."))
+    return weights
+
+def make_pairs(names: dict, results: list) -> dict:
+    pass
+
+
+def read_results_file(filepath: Union[Path, str]) -> dict:
+    filelist = glob(filepath + "*.txt")
+    logger.info("filelist: %s", filelist)
+    files = {}
+    for filename in filelist:
+        try:
+            file = open(filename, "r", encoding="utf-8")
+            lines = file.readlines()
+            if RESULT_FILE_SUFFIX in filename:
+                names, results = read_names(lines)
+                files[RESULT_FILE_SUFFIX] = [names, results]
+                logger.debug(f"{names=}")
+                logger.debug(f"{results=}")
+            elif WEIGHTS_FILE_SUFFIX in filename:
+                weights = read_weigths(lines)
+                files[RESULT_FILE_SUFFIX] = weights
+                logger.debug(f"{weights=}")
+            elif RESULT_FILE_5_6_SUFFIX in filename:
+                names, results = read_names(lines)
+                files[RESULT_FILE_5_6_SUFFIX] = [names, results]
+                logger.debug(f"{names=}")
+                logger.debug(f"{results=}")
+            elif WEIGHTS_FILE_5_6_SUFFIX in filename:
+                weights = read_weigths(lines)
+                files[WEIGHTS_FILE_5_6_SUFFIX] = weights
+                logger.debug(f"{weights=}")
+            else:
+                logger.warning("File %s not mathing with tournament files", filename)
+        except Exception as error:
+            logger.error("File %s doesn't read, check existence or encoding \n%s", filename, error)
+
+    return files
+
+
+read_results_file('./data/left_hand_75kg/')

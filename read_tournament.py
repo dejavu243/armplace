@@ -24,6 +24,9 @@ Read tournament from files
 import logging
 from pathlib import Path
 
+from data.DE_OLD_Winner import DE_OLD_winner
+from data.DE_OLD_Loser import DE_OLD_loser
+
 logger = logging.getLogger(__name__)
 logging.basicConfig()
 logger.setLevel(logging.INFO)

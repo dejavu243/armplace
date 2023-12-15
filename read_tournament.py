@@ -108,6 +108,7 @@ def tournament_recovery(files: dict) -> list:
         tournament_sequence[index-1] = index
     pairs = []
     pair_counter = 0
+
     for index in range(0, len(tournament_sequence), 2):
         pair_index = index // 2
         pair_counter += 1
@@ -141,7 +142,16 @@ def tournament_recovery(files: dict) -> list:
             logger.debug(f"pair {names[winner_index_in_names]} (win), {names[loser_index_in_names]} (loose)")
             pairs.append((names[winner_index_in_names], names[loser_index_in_names]))
 
+    # добавление пары за 5-6 место
+    names, results = files[RESULT_FILE_5_6_SUFFIX]
+    pair_counter += 1
+    if results[0] == "+":
+        pairs.append((names[1], names[2]))
+    elif results[0] == "-":
+        pairs.append((names[2], names[1]))
+
     logger.debug(tournament_sequence)
+
     return pairs
 
 #####################

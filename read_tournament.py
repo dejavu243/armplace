@@ -100,7 +100,7 @@ def tournament_recovery(files: dict) -> list:
     names, results = files[RESULT_FILE_SUFFIX]
     sportsmen_count = len(names.keys())
     result_length = len(results)
-    sequence_length = 2 * result_length + sportsmen_count
+    sequence_length = 2 * (result_length+1) + sportsmen_count
     with_superfinal = True if result_length == 2 * (sportsmen_count-1) + 1 else False
     tournament_sequence = [0] * sequence_length
     logger.debug(f"{sequence_length=}, {result_length=}, {sportsmen_count=}, {with_superfinal=}")
@@ -155,7 +155,7 @@ def tournament_recovery(files: dict) -> list:
     return pairs
 
 #####################
-files = read_tournament_files('./data/left_hand_75kg/')
+files = read_tournament_files('./data/right_hand_70kg/')
 pairs = tournament_recovery(files)
 
 for pair in pairs:

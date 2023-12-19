@@ -174,9 +174,9 @@ def tournament_recovery(_files: dict) -> list:
         names, results = _files[RESULT_FILE_5_6_SUFFIX]
         pair_counter += 1
         if results[0] == "+":
-            _pairs.append((names[1], names[2]))
-        elif results[0] == "-":
             _pairs.append((names[2], names[1]))
+        elif results[0] == "-":
+            _pairs.append((names[1], names[2]))
 
     logger.info(f"Pairs number: {len(_pairs)}")
     logger.debug(tournament_sequence)

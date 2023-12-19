@@ -3,15 +3,23 @@ import logging
 import matplotlib.pyplot as plt
 import networkx as nx
 
-import data.left_hand_80kg.left_hand_80kg as lh80
-import data.left_hand_75kg.left_hand_75kg as lh75
-import data.right_hand_70kg.right_hand_70kg as rh70
+# import data.left_hand_80kg.left_hand_80kg as lh80
+# import data.left_hand_75kg.left_hand_75kg as lh75
+# import data.right_hand_70kg.right_hand_70kg as rh70
 from grinev_algorithm import TournamentGraphConstructor
 from topological_sort import calc_and_save_places
 
-names, pairs = lh75.names, lh75.pairs
+from read_tournament import read_tournament_files, tournament_recovery, RESULT_FILE_SUFFIX, RESULT_FILE_5_6_SUFFIX, WEIGHTS_FILE_SUFFIX, WEIGHTS_FILE_5_6_SUFFIX
+
+# names, pairs = lh75.names, lh75.pairs
 # names, pairs = rh70.names, rh70.pairs
 # names, pairs = lh80.names, lh80.pairs
+
+files = read_tournament_files('./data/right_hand_70kg/')
+pairs = tournament_recovery(files)
+
+#weights = files[WEIGHTS_FILE_SUFFIX]
+names = files[RESULT_FILE_SUFFIX][0]
 
 logger = logging.getLogger(__name__)
 logging.basicConfig()

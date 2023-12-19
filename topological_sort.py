@@ -21,10 +21,6 @@ import data.right_hand_70kg.right_hand_70kg as rh70
 import data.left_hand_80kg.left_hand_80kg as lh80
 from grinev_algorithm import TournamentGraphConstructor
 
-names, pairs = lh75.names, lh75.pairs
-# names, pairs = lh80.names, lh80.pairs
-# names, pairs = rh70.names, rh70.pairs
-
 plt.rcParams["figure.figsize"] = (20, 10)
 logger = logging.getLogger(__name__)
 logging.basicConfig()
@@ -86,6 +82,7 @@ def get_target_points_sorted(target_points, keys=None, reverse=None):
 
 def get_places(_tournament: dict, _graph: networkx.Graph):
     init_graph = _graph.copy()
+    print(f"{init_graph}")
     source = [x for x in _graph.nodes() if _graph.out_degree(x) > 0 and _graph.in_degree(x) == 0][
         0]  # only one source, first place
     targets = [x for x in _graph.nodes() if _graph.out_degree(x) == 0 and _graph.in_degree(x) > 0]
@@ -126,10 +123,15 @@ def get_places(_tournament: dict, _graph: networkx.Graph):
             winners_max_level = max([_tournament[winner[0]]["level"] for winner in target_winners])
             winners_min_level = min([_tournament[winner[0]]["level"] for winner in target_winners])
             winners_max_wins = max([_tournament[winner[0]]["wins"] for winner in target_winners])
-            chain_up_length = len(max(nx.all_simple_paths(_graph, source, target), key=lambda x: len(x)))
-            chain_down_length = len(
-                max(nx.all_simple_paths(init_graph, target, targets) if target not in targets else [[]],
-                    key=lambda x: len(x)))
+            try:
+                chain_up_length = len(max(nx.all_simple_paths(_graph, source, target), key=lambda x: len(x)))
+                chain_down_length = len(
+                    max(nx.all_simple_paths(init_graph, target, targets) if target not in targets else [[]],
+                        key=lambda x: len(x)))
+            except:
+                logger.warning("Can't calculate chain up and chain down lengths, setting to zero")
+                chain_up_length = 0
+                chain_down_length = 0
 
             target_points[target] = {"winners_mean_level": winners_mean_level,
                                      "winners_max_wins": winners_max_wins,
@@ -175,14 +177,21 @@ def calc_and_save_places(_names: dict, _pairs: dict, filename: pathlib.Path = pa
     tournament = get_places(tour, graph)
 
     with open(filename, 'w', encoding="utf-8") as file:
-        for k, v in sorted(tournament.items(), key=lambda x: x[1]['place']):
-            file.write(f'{v["place"]} {k}\n')
-            msg = f'PLACE:, {v["place"]}, \t{k}\tLEVEL: {v["level"]}, \tW/L: {v["wins"]}/{v["losses"]}'
-            logger.info(msg)
+        for k, v in sorted(tournament.items(), key=lambda x: x[1]['place'] if 'place' in x[1].keys() else -1):
+            if 'place' in v.keys():
+                file.write(f'{v["place"]} {k}\n')
+                msg = f'PLACE:, {v["place"]}, \t{k}\tLEVEL: {v["level"]}, \tW/L: {v["wins"]}/{v["losses"]}'
+                logger.info(msg)
+            else:
+                logger.error(f"There is no place for {k}, {v}")
 
 
 if __name__ == '__main__':
+    names, pairs = lh75.names, lh75.pairs
+    # names, pairs = lh80.names, lh80.pairs
+    # names, pairs = rh70.names, rh70.pairs
     # example topological sort
+    logger.info(f"Pairs number: {len(pairs)}")
     alg = TournamentGraphConstructor(names, pairs)
     graph = alg.make_graph()
     top_sort = list(nx.topological_sort(graph))

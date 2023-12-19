@@ -7,3 +7,7 @@
 .venv
 venv/
 ENV/
+
+edgelist.txt
+places.txt
+/*.docx

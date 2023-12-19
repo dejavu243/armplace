@@ -31,7 +31,10 @@ def drop_duplicates(lists: list[list], cut_less: int = 2) -> list[list]:
 
 def get_max_chains(lists: list[list]) -> list[list]:
     """Функция нахождения самых длинных цепочек"""
-    max_chain_length = max(len(x) for x in lists)
+    try:
+        max_chain_length = max(len(x) for x in lists)
+    except:
+        max_chain_length = 0
     max_chains = []
     for inner_list in lists:
         if len(inner_list) == max_chain_length:

@@ -42,6 +42,8 @@ class TournamentGraphConstructor:
     def __init__(self, names: dict, pairs: list):
         self.names = names
         self.pairs = pairs
+        logger.info("names for tournament %s", self.names)
+        logger.info("pairs for tournament %s", self.pairs)
 
     def find_winner(self, sportsman: str) -> list:
         """Поиск спортсменов выигравших sportsman"""
@@ -51,6 +53,7 @@ class TournamentGraphConstructor:
                                   and pair[1] not in winners
             if is_winner_condition:
                 winners.append(pair[1])
+        logger.info(f"{sportsman=}, {winners=}")
         return winners
 
     def find_total_losers(self) -> list:
@@ -72,7 +75,8 @@ class TournamentGraphConstructor:
         sportsmen_next = [first_sportsman]
         stop_condition = True
         logger.debug("Initial sportsmen %s list", sportsmen_next)
-        while stop_condition:
+        depth, max_depth = 0, 15
+        while stop_condition and depth < max_depth:
             sportsmen = list(set(sportsmen_next)).copy()
             sportsmen_next = []
             for sportsman in sportsmen:
@@ -96,6 +100,7 @@ class TournamentGraphConstructor:
             if not sportsmen_next:
                 logger.info("Algorithm for %s finished", first_sportsman)
                 stop_condition = False
+            depth += 1
         return chain
 
     def make_all_chains(self) -> dict:

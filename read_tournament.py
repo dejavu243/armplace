@@ -22,16 +22,16 @@ Read tournament from files
 """
 
 import logging
-from pathlib import Path
 from glob import glob
+from pathlib import Path
 from typing import Union
 
-from data.DE_OLD_Winner import DE_OLD_winner
 from data.DE_OLD_Loser import DE_OLD_loser
+from data.DE_OLD_Winner import DE_OLD_winner
 
 logger = logging.getLogger(__name__)
 logging.basicConfig()
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 RESULT_FILE_SUFFIX = "[DE]"
 RESULT_FILE_5_6_SUFFIX = "[DE_5-6]"
@@ -46,7 +46,7 @@ def read_names(lines: list) -> tuple:
     results = None
     for i, name in enumerate(lines):
         if "+" not in name and "-" not in name:
-            names[i+1] = name.strip()
+            names[i + 1] = name.strip()
         else:
             results = list(name.strip())
     return names, results
@@ -55,58 +55,79 @@ def read_names(lines: list) -> tuple:
 def read_weigths(lines: list) -> dict:
     weights = {}
     for i, weight in enumerate(lines):
-        weights[i+1] = float(weight.strip().replace(",", "."))
+        weights[i + 1] = float(weight.strip().replace(",", "."))
     return weights
-
-def make_pairs(names: dict, results: list) -> dict:
-    pass
 
 
 def read_tournament_files(filepath: Union[Path, str]) -> dict:
     filelist = glob(filepath + "*.txt")
     logger.info("filelist: %s", filelist)
-    files = {}
+    _files = {RESULT_FILE_SUFFIX: None, RESULT_FILE_5_6_SUFFIX: None,
+              WEIGHTS_FILE_SUFFIX: None, WEIGHTS_FILE_5_6_SUFFIX: None}
     for filename in filelist:
         try:
             file = open(filename, "r", encoding="utf-8")
             lines = file.readlines()
             if RESULT_FILE_SUFFIX in filename:
                 names, results = read_names(lines)
-                files[RESULT_FILE_SUFFIX] = [names, results]
+                _files[RESULT_FILE_SUFFIX] = [names, results]
                 logger.debug(f"{names=}")
                 logger.debug(f"{results=}")
             elif WEIGHTS_FILE_SUFFIX in filename:
                 weights = read_weigths(lines)
-                files[WEIGHTS_FILE_SUFFIX] = weights
+                _files[WEIGHTS_FILE_SUFFIX] = weights
                 logger.debug(f"{weights=}")
             elif RESULT_FILE_5_6_SUFFIX in filename:
                 names, results = read_names(lines)
-                files[RESULT_FILE_5_6_SUFFIX] = [names, results]
+                _files[RESULT_FILE_5_6_SUFFIX] = [names, results]
                 logger.debug(f"{names=}")
                 logger.debug(f"{results=}")
             elif WEIGHTS_FILE_5_6_SUFFIX in filename:
                 weights = read_weigths(lines)
-                files[WEIGHTS_FILE_5_6_SUFFIX] = weights
+                _files[WEIGHTS_FILE_5_6_SUFFIX] = weights
                 logger.debug(f"{weights=}")
             else:
                 logger.warning("File %s not mathing with tournament files", filename)
         except Exception as error:
             logger.error("File %s doesn't read, check existence or encoding \n%s", filename, error)
-    logger.info(f"{len(files.keys())} tournament files read")
-    return files
+    logger.info(f"{len(_files.keys())} tournament files read")
+    return _files
 
 
-def tournament_recovery(files: dict) -> list:
-    names, results = files[RESULT_FILE_SUFFIX]
+def drop_simple_cycles(_pairs: list) -> list:
+    pairs_without_simple_cycles = []
+    for _pair in _pairs:
+        pair_forward_count = _pairs.count(_pair)
+        pair_backward_count = _pairs.count((_pair[1], _pair[0]))
+        logger.debug(f"{_pair=}, {pair_forward_count=}, {pair_backward_count=}")
+        if pair_forward_count >= 1 and pair_backward_count == 0:
+            if _pair not in pairs_without_simple_cycles:
+                pairs_without_simple_cycles.append(_pair)
+        if pair_forward_count == 2 and pair_backward_count == 1:
+            if (_pair[1], _pair[0]) not in pairs_without_simple_cycles:
+                pairs_without_simple_cycles.append(_pair)
+        if pair_forward_count == 1 and pair_backward_count == 2:
+            if _pair not in pairs_without_simple_cycles:
+                pairs_without_simple_cycles.append((_pair[1], _pair[0]))
+
+    if len(_pairs) != len(pairs_without_simple_cycles):
+        logger.info(f"Dropped pairs number: {len(_pairs) - len(pairs_without_simple_cycles)}, "
+                    f"number of result pairs: {len(pairs_without_simple_cycles)}")
+
+    return pairs_without_simple_cycles
+
+
+def tournament_recovery(_files: dict) -> list:
+    names, results = _files[RESULT_FILE_SUFFIX]
     sportsmen_count = len(names.keys())
     result_length = len(results)
-    sequence_length = 2 * (result_length+1) + sportsmen_count
-    with_superfinal = True if result_length == 2 * (sportsmen_count-1) + 1 else False
+    sequence_length = 2 * (result_length + 1) + sportsmen_count
+    with_superfinal = True if result_length == 2 * (sportsmen_count - 1) + 1 else False
     tournament_sequence = [0] * sequence_length
     logger.debug(f"{sequence_length=}, {result_length=}, {sportsmen_count=}, {with_superfinal=}")
     for index, name in names.items():
-        tournament_sequence[index-1] = index
-    pairs = []
+        tournament_sequence[index - 1] = index
+    _pairs = []
     pair_counter = 0
 
     for index in range(0, len(tournament_sequence), 2):
@@ -120,43 +141,53 @@ def tournament_recovery(files: dict) -> list:
 
         if results[pair_index] == "+":
             winner_index_in_names = tournament_sequence[index]
-            loser_index_in_names = tournament_sequence[index+1]
-            new_winner_index = DE_OLD_winner[pair_index][sportsmen_count-2] # TODO: why -2
-            new_loser_index = DE_OLD_loser[pair_index][sportsmen_count-2]
-            logger.debug(f"{loser_index_in_names=}, {winner_index_in_names=}, {new_loser_index=}, {new_winner_index=} {results[pair_index]=}")
+            loser_index_in_names = tournament_sequence[index + 1]
+            new_winner_index = DE_OLD_winner[pair_index][sportsmen_count - 2]  # TODO: why -2
+            new_loser_index = DE_OLD_loser[pair_index][sportsmen_count - 2]
+            logger.debug(
+                f"{loser_index_in_names=}, {winner_index_in_names=}, {new_loser_index=}, {new_winner_index=} {results[pair_index]=}")
 
-            tournament_sequence[new_winner_index-1] = winner_index_in_names
-            tournament_sequence[new_loser_index-1] = loser_index_in_names
-            logger.debug(f"pair: {names[winner_index_in_names]} (win), {names[loser_index_in_names]} (loose)")
-            pairs.append((names[winner_index_in_names], names[loser_index_in_names]))
+            tournament_sequence[new_winner_index - 1] = winner_index_in_names
+            tournament_sequence[new_loser_index - 1] = loser_index_in_names
+            logger.debug(
+                f"pair: {names[winner_index_in_names]} (win), {names[loser_index_in_names]} (loose)")
+            # _pairs.append((names[winner_index_in_names], names[loser_index_in_names]))
+            _pairs.append((names[loser_index_in_names], names[winner_index_in_names]))
 
         elif results[pair_index] == "-":
-            winner_index_in_names = tournament_sequence[index+1]
+            winner_index_in_names = tournament_sequence[index + 1]
             loser_index_in_names = tournament_sequence[index]
-            new_winner_index = DE_OLD_winner[pair_index][sportsmen_count-2]
-            new_loser_index = DE_OLD_loser[pair_index][sportsmen_count-2]
-            logger.debug(f"{loser_index_in_names=}, {winner_index_in_names=}, {new_loser_index=}, {new_winner_index=} {results[pair_index]=}")
+            new_winner_index = DE_OLD_winner[pair_index][sportsmen_count - 2]
+            new_loser_index = DE_OLD_loser[pair_index][sportsmen_count - 2]
+            logger.debug(
+                f"{loser_index_in_names=}, {winner_index_in_names=}, {new_loser_index=}, {new_winner_index=} {results[pair_index]=}")
 
-            tournament_sequence[new_winner_index-1] = winner_index_in_names
-            tournament_sequence[new_loser_index-1] = loser_index_in_names
-            logger.debug(f"pair {names[winner_index_in_names]} (win), {names[loser_index_in_names]} (loose)")
-            pairs.append((names[winner_index_in_names], names[loser_index_in_names]))
+            tournament_sequence[new_winner_index - 1] = winner_index_in_names
+            tournament_sequence[new_loser_index - 1] = loser_index_in_names
+            logger.debug(
+                f"pair {names[winner_index_in_names]} (win), {names[loser_index_in_names]} (loose)")
+            # _pairs.append((names[winner_index_in_names], names[loser_index_in_names]))
+            _pairs.append((names[loser_index_in_names], names[winner_index_in_names]))
 
     # добавление пары за 5-6 место
-    names, results = files[RESULT_FILE_5_6_SUFFIX]
-    pair_counter += 1
-    if results[0] == "+":
-        pairs.append((names[1], names[2]))
-    elif results[0] == "-":
-        pairs.append((names[2], names[1]))
+    if _files[RESULT_FILE_5_6_SUFFIX]:
+        names, results = _files[RESULT_FILE_5_6_SUFFIX]
+        pair_counter += 1
+        if results[0] == "+":
+            _pairs.append((names[1], names[2]))
+        elif results[0] == "-":
+            _pairs.append((names[2], names[1]))
 
+    logger.info(f"Pairs number: {len(_pairs)}")
     logger.debug(tournament_sequence)
 
-    return pairs
+    return drop_simple_cycles(_pairs)
 
-#####################
-files = read_tournament_files('./data/right_hand_70kg/')
-pairs = tournament_recovery(files)
 
-for pair in pairs:
-    print(pair)
+##########If run from here###########
+if __name__ == '__main__':
+    files = read_tournament_files('./data/left_hand_75kg/')
+    pairs = tournament_recovery(files)
+
+    for pair in pairs:
+        print(pair)
